@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MessageHawk.Api/MessageHawk.Api.csproj" />
+    <Project Path="src/MessageHawk.Application/MessageHawk.Application.csproj" />
+    <Project Path="src/MessageHawk.Domain/MessageHawk.Domain.csproj" />
+    <Project Path="src/MessageHawk.Infrastructure/MessageHawk.Infrastructure.csproj" />
+    <Project Path="src/MessageHawk.Worker/MessageHawk.Worker.csproj" />
+  </Folder>
+</Solution>

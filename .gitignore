@@ -1,0 +1,9 @@
+bin/
+obj/
+.vs/
+*.user
+[Dd]ebug/
+[Rr]elease/
+node_modules/
+client/messagehawk-web/dist/
+*.log
