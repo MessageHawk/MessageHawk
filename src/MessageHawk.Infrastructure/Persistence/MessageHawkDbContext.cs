@@ -3,8 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MessageHawk.Infrastructure.Persistence;
 
-public sealed class MessageHawkDbContext(DbContextOptions<MessageHawkDbContext> options) : DbContext(options)
+public abstract class MessageHawkDbContext : DbContext
 {
+    protected MessageHawkDbContext(DbContextOptions options) : base(options)
+    {
+    }
+
     public DbSet<MessageType> MessageTypes => Set<MessageType>();
     public DbSet<Interchange> Interchanges => Set<Interchange>();
     public DbSet<LogStep> LogSteps => Set<LogStep>();
@@ -38,7 +42,6 @@ public sealed class MessageHawkDbContext(DbContextOptions<MessageHawkDbContext> 
             e.Property(x => x.Status).HasMaxLength(256).IsRequired();
             e.Property(x => x.ContentType).HasMaxLength(256);
             e.Property(x => x.MessageBody).IsRequired();
-            e.Property(x => x.IndexedPropertiesJson).HasColumnType("nvarchar(max)");
             e.HasOne(x => x.Interchange)
                 .WithMany(i => i.Steps)
                 .HasForeignKey(x => x.InterchangeId)

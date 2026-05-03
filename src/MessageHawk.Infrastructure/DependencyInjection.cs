@@ -17,10 +17,25 @@ public static class DependencyInjection
     {
         services.Configure<RabbitMqOptions>(configuration.GetSection(RabbitMqOptions.SectionName));
 
-        services.AddDbContext<MessageHawkDbContext>(options =>
-            options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
-                sql => sql.MigrationsAssembly(typeof(MessageHawkDbContext).Assembly.GetName().Name)));
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+        var migrationsAssembly = typeof(MessageHawkDbContext).Assembly.GetName().Name!;
+        var provider = configuration.GetValue("Database:Provider", "SqlServer");
+
+        if (string.Equals(provider, "PostgreSQL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(provider, "Npgsql", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddDbContext<MessageHawkDbContext, MessageHawkDbContextNpgsql>(options =>
+                options.UseNpgsql(connectionString, npgsql =>
+                    npgsql.MigrationsAssembly(migrationsAssembly)));
+        }
+        else
+        {
+            services.AddDbContext<MessageHawkDbContext, MessageHawkDbContextSqlServer>(options =>
+                options.UseSqlServer(connectionString, sql =>
+                    sql.MigrationsAssembly(migrationsAssembly)));
+        }
 
         services.AddSingleton<RabbitMqConnection>();
         services.AddSingleton<IMessageQueuePublisher, RabbitMqLogStepPublisher>();

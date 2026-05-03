@@ -40,8 +40,8 @@ ESB-style message log tracker: **ASP.NET Core** API publishes to **RabbitMQ** (s
 | entities, invariants | `src/MessageHawk.Domain`  |
 | commands, validators | `src/MessageHawk.Application` |
 | EF / infra | `src/MessageHawk.Infrastructure` |
-|   EF Core, dual providers | `src/MessageHawk.Infrastucture/Persistence` |
-|   RabbitMQ publish/consume | `src/MessageHawk.Infrastucture/Messaging` |
+|   EF Core, dual providers | `src/MessageHawk.Infrastructure/Persistence` |
+|   RabbitMQ publish/consume | `src/MessageHawk.Infrastructure/Messaging` |
 | Vite + TS SPA frontend | `client/messagehawk-web` |
 | Root compose (API + worker + deps) | `docker-compose.yml` |
 
@@ -55,17 +55,21 @@ ESB-style message log tracker: **ASP.NET Core** API publishes to **RabbitMQ** (s
 - Metrics: publish rate, consumer lag (queue depth per shard), processing duration, duplicate/idempotent hits, 401/403 rates.
 - Alerts on shard depth sustained high (ordering bottleneck or slow DB).
 
-## Phased delivery (adjusted)
+## Phased delivery (GitHub issue #4)
 
 | Phase | Deliverables |
+|-------|--------------|
 | M1 | Entra auth, ingest API → sharded RabbitMQ, worker + idempotent DB writes, SQL Server or PostgreSQL (one first), SPA: interchange lookup + timeline, audit on detail read |
 | M2 | Second DB provider + CI matrix, message type registry + indexed properties, RBAC dimensions, search with caps + cursors, blob storage for large bodies |
-| M3 | Hardening: rate limits, retention, ops runbooks, K8s + Windows deployment docs, load test to validate ordering and peak|
+| M3 | Hardening: rate limits, retention, ops runbooks, K8s + Windows deployment docs, load test to validate ordering and peak |
+
+**M2 progress:** dual EF Core providers (`Database:Provider` `SqlServer` \| `PostgreSQL`), separate migration sets (`MessageHawkDbContextSqlServer` / `MessageHawkDbContextNpgsql`), CI build matrix + PostgreSQL `dotnet ef database update` job. Design-time: `MESSAGEHAWK_SQL_CONNECTION` / `MESSAGEHAWK_POSTGRES_CONNECTION`.
 
 ## Risks and mitigations
 
 | Risk | Mitigation |
+|------|------------|
 | Ordering violated by buggy clients | Document contract + optional SequenceNumber + monitoring for gaps |
 | Shard hot spots | Increase N; monitor per-queue depth |
 | Large bodies hurt DB | Offload to blob; stream downloads in API |
-| Dual migrations drift	| Automated tests that apply both; single source of truth for schema in docs |
+| Dual migrations drift | Automated tests that apply both; single source of truth for schema in docs |

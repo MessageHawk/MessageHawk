@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet build MessageHawk.slnx -c Release
+
+  ef-postgresql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: messagehawk
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d messagehawk"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+      - run: dotnet tool restore
+      - name: Apply EF Core migrations (PostgreSQL)
+        run: >
+          dotnet ef database update
+          --project src/MessageHawk.Infrastructure/MessageHawk.Infrastructure.csproj
+          --startup-project src/MessageHawk.Api/MessageHawk.Api.csproj
+          --context MessageHawkDbContextNpgsql
+          --connection "Host=localhost;Port=5432;Database=messagehawk;Username=postgres;Password=postgres"

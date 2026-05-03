@@ -25,13 +25,16 @@ RabbitMQ management UI: http://localhost:15672 (guest / guest).
 
 ## Database
 
+The API uses **EF Core** with **SQL Server** (default) or **PostgreSQL**. Set `Database:Provider` to `SqlServer` or `PostgreSQL` and configure `ConnectionStrings:DefaultConnection` accordingly. PostgreSQL migrations: add `--context MessageHawkDbContextNpgsql` to `dotnet-ef` commands; SQL Server uses `--context MessageHawkDbContextSqlServer`.
+
 Apply migrations (or run the API once in Development — it calls `Migrate()` automatically):
 
 ```powershell
 dotnet tool restore
 dotnet tool run dotnet-ef database update `
   --project src/MessageHawk.Infrastructure/MessageHawk.Infrastructure.csproj `
-  --startup-project src/MessageHawk.Api/MessageHawk.Api.csproj
+  --startup-project src/MessageHawk.Api/MessageHawk.Api.csproj `
+  --context MessageHawkDbContextSqlServer
 ```
 
 ## Run the backend
