@@ -1,11 +1,13 @@
-@base = https://localhost:7079
+@base = http://localhost:5206
 @interchangeId = 11111111-1111-1111-1111-111111111111
 
 ### Health
 GET {{base}}/health
+Content-Type: application/json
 
 ### Search interchanges (requires auth — use dev handler in Development)
 GET {{base}}/api/v1/interchanges?limit=10
+Content-Type: application/json
 
 ### Enqueue first step
 POST {{base}}/api/v1/interchanges/{{interchangeId}}/steps
