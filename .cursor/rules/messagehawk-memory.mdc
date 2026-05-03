@@ -1,0 +1,71 @@
+---
+description: MessageHawk project facts — stack, ports, env vars, and layout for agent memory
+alwaysApply: true
+---
+
+# MessageHawk — agent memory
+
+## What it is
+
+ESB-style message log tracker: **ASP.NET Core** API publishes to **RabbitMQ** (sharded queues), **Worker** (`Host.CreateApplicationBuilder`) consumes and persists to **SQL Server** (EF Core). **React + Vite** SPA in `client/messagehawk-web`; `npm run build` outputs to `src/MessageHawk.Api/wwwroot`.
+
+## Ports and SPA
+
+- API: **https://localhost:7079** (use with Vite proxy), **http://localhost:5206**
+- Vite dev: **5173**; proxies `/api` and `/health` to **https://localhost:7079**
+- Run API with **HTTPS** launch profile when developing the SPA locally
+
+## Sharding — do not mismatch
+
+- `RabbitMq:ShardCount` must match **everywhere** (API, worker, topology).
+- **Development** overrides to **1** in `appsettings.Development.json` (base `appsettings.json` uses **16**).
+- **Worker in Docker / generic host:** use **`DOTNET_ENVIRONMENT=Development`**, not only `ASPNETCORE_ENVIRONMENT`, or Development settings (including `ShardCount`) are skipped.
+
+## Dev container
+
+- **Node (npm):** devcontainer **features** include Node LTS; frontend path **`client/messagehawk-web`** (`npm ci` in postCreate).
+- **RabbitMQ** hostname from app container: **`rabbitmq`** (see `containerEnv`).
+- Forwarded ports include **5173**, **7079**, SQL, AMQP, management UI as in `devcontainer.json`.
+
+## Auth
+
+- **Development:** `Authentication:DisableJwt` allows calls without Entra; **never enable that pattern for production.**
+
+## Solution shortcuts
+
+| Area | Location |
+|------|----------|
+| ASP.NET Core: controllers, auth, SPA static files in prod | `src/MessageHawk.Api` |
+| RabbitMQ consumer(s), shard index from env | `src/MessageHawk.Worker` |
+| entities, invariants | `src/MessageHawk.Domain`  |
+| commands, validators | `src/MessageHawk.Application` |
+| EF / infra | `src/MessageHawk.Infrastructure` |
+|   EF Core, dual providers | `src/MessageHawk.Infrastucture/Persistence` |
+|   RabbitMQ publish/consume | `src/MessageHawk.Infrastucture/Messaging` |
+| Vite + TS SPA frontend | `client/messagehawk-web` |
+| Root compose (API + worker + deps) | `docker-compose.yml` |
+
+- Dockerfile: multi-stage — build SPA + publish API; worker image separate (smaller).
+- Helm: deployments for api, worker (shard-aware), secrets for connection strings and Entra; ConfigMap for ShardCount / ShardIndex.
+- Windows Server: same binaries; workers as Windows Service (e.g. UseWindowsService()), RabbitMQ and DB connection strings in config; optional IIS for API reverse proxy to Kestrel.
+
+## Observability
+
+- OpenTelemetry: trace from HTTP ingest → publish → consume → DB.
+- Metrics: publish rate, consumer lag (queue depth per shard), processing duration, duplicate/idempotent hits, 401/403 rates.
+- Alerts on shard depth sustained high (ordering bottleneck or slow DB).
+
+## Phased delivery (adjusted)
+
+| Phase | Deliverables |
+| M1 | Entra auth, ingest API → sharded RabbitMQ, worker + idempotent DB writes, SQL Server or PostgreSQL (one first), SPA: interchange lookup + timeline, audit on detail read |
+| M2 | Second DB provider + CI matrix, message type registry + indexed properties, RBAC dimensions, search with caps + cursors, blob storage for large bodies |
+| M3 | Hardening: rate limits, retention, ops runbooks, K8s + Windows deployment docs, load test to validate ordering and peak|
+
+## Risks and mitigations
+
+| Risk | Mitigation |
+| Ordering violated by buggy clients | Document contract + optional SequenceNumber + monitoring for gaps |
+| Shard hot spots | Increase N; monitor per-queue depth |
+| Large bodies hurt DB | Offload to blob; stream downloads in API |
+| Dual migrations drift	| Automated tests that apply both; single source of truth for schema in docs |
