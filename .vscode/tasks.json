@@ -48,6 +48,64 @@
                 "${workspaceFolder}/src/MessageHawk.Api/MessageHawk.Api.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "client: install",
+            "type": "shell",
+            "command": "npm ci",
+            "options": {
+                "cwd": "${workspaceFolder}/client/messagehawk-web"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "client: build",
+            "type": "shell",
+            "command": "npm run build",
+            "options": {
+                "cwd": "${workspaceFolder}/client/messagehawk-web"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "client: dev",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": {
+                "cwd": "${workspaceFolder}/client/messagehawk-web"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "vite",
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": "Local:\\s+http://localhost:5173/?"
+                }
+            }
+        },
+        {
+            "label": "client: preview",
+            "type": "shell",
+            "command": "npm run preview",
+            "options": {
+                "cwd": "${workspaceFolder}/client/messagehawk-web"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "vite-preview",
+                "pattern": {
+                    "regexp": "^$"
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": "Local:\\s+http://localhost:4173/?"
+                }
+            }
         }
     ]
 }
