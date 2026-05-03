@@ -11,7 +11,11 @@
 	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "lts"
+		}
+	},
 
 	// Configure tool-specific properties.
 	"customizations": {
@@ -43,7 +47,7 @@
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [5000, 5001, 5206, "db:1433", "rabbitmq:5672", "rabbitmq:15672"],
+	"forwardPorts": [5000, 5001, 4173, 5173, 5206, 7079, "db:1433", "rabbitmq:5672", "rabbitmq:15672"],
 	// "portsAttributes": {
 	//		"5001": {
 	//			"protocol": "https"
@@ -51,7 +55,7 @@
 	// }
 
 	// postCreateCommand.sh parameters: $1=SA password, $2=dacpac path, $3=sql script(s) path
-	"postCreateCommand": "bash .devcontainer/mssql/postCreateCommand.sh 'MessageHawk_Dev_123' './bin/Debug/' './.devcontainer/mssql/'"
+	"postCreateCommand": "bash .devcontainer/mssql/postCreateCommand.sh 'MessageHawk_Dev_123' './bin/Debug/' './.devcontainer/mssql/' && (cd client/messagehawk-web && npm ci)"
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
