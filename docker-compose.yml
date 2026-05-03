@@ -38,7 +38,7 @@ services:
       dockerfile: Dockerfile
       target: worker
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ENVIRONMENT: Development
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=MessageHawk;User Id=sa;Password=MessageHawk_Dev_123;TrustServerCertificate=True;MultipleActiveResultSets=true"
       RabbitMq__HostName: rabbitmq
     depends_on:
