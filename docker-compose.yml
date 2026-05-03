@@ -15,3 +15,32 @@ services:
       MSSQL_SA_PASSWORD: "MessageHawk_Dev_123"
     ports:
       - "1433:1433"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    ports:
+      - "5206:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=MessageHawk;User Id=sa;Password=MessageHawk_Dev_123;TrustServerCertificate=True;MultipleActiveResultSets=true"
+      RabbitMq__HostName: rabbitmq
+      Authentication__DisableJwt: "true"
+    depends_on:
+      - sqlserver
+      - rabbitmq
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: worker
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=MessageHawk;User Id=sa;Password=MessageHawk_Dev_123;TrustServerCertificate=True;MultipleActiveResultSets=true"
+      RabbitMq__HostName: rabbitmq
+    depends_on:
+      - sqlserver
+      - rabbitmq
